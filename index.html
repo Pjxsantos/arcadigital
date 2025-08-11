@@ -1,728 +1,901 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arca Digital: Guia de Suprimentos</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <style>
-        :root {
-            --bg-color: #0D0B14; /* Deep Purple/Black */
-            --card-bg-color: rgba(23, 19, 33, 0.6); /* Dark Purple with opacity */
-            --border-color: rgba(255, 255, 255, 0.1);
-            --text-primary: #f9fafb; /* Almost white */
-            --text-secondary: #a3a3a3; /* Gray-400 */
-            --accent-color-cyan: #22d3ee;
-            --accent-color-purple: #a855f7;
-        }
-
-        @keyframes aurora {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-            padding-top: 80px;
-            overflow-x: hidden;
-            position: relative;
-        }
-        
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(235deg, #0f0c29, #302b63, #24243e, #0f0c29);
-            background-size: 400% 400%;
-            animation: aurora 20s ease infinite;
-            z-index: -1;
-            opacity: 0.6;
-        }
-        
-        .glass-card {
-            background: var(--card-bg-color);
-            backdrop-filter: blur(16px) saturate(150%);
-            -webkit-backdrop-filter: blur(16px) saturate(150%);
-            border-radius: 1.25rem;
-            border: 1px solid var(--border-color);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .glass-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            border-color: rgba(34, 211, 238, 0.3);
-        }
-
-        .nav-button {
-            color: var(--text-secondary);
-            font-weight: 500;
-            transition: all 0.2s ease-in-out;
-        }
-        .nav-button.active {
-            color: var(--accent-color-cyan);
-            font-weight: 600;
-        }
-        .nav-button.active svg {
-            color: var(--accent-color-cyan);
-        }
-        .nav-button:hover svg, .nav-button:hover span {
-             color: var(--accent-color-cyan);
-        }
-        .nav-button svg {
-            color: var(--text-secondary);
-            transition: color 0.2s ease-in-out;
-        }
-
-        .neon-text {
-            color: var(--accent-color-cyan);
-            text-shadow: 0 0 10px rgba(34, 211, 238, 0.5), 0 0 20px rgba(168, 85, 247, 0.3);
-        }
-
-        input[type='range'] {
-            -webkit-appearance: none; appearance: none;
-            width: 100%; height: 6px;
-            background: linear-gradient(90deg, var(--accent-color-cyan), var(--accent-color-purple));
-            border-radius: 3px; outline: none;
-        }
-        input[type='range']::-webkit-slider-thumb {
-            -webkit-appearance: none; appearance: none;
-            width: 24px; height: 24px;
-            background: var(--text-primary); cursor: pointer;
-            border-radius: 50%; border: 4px solid #302b63;
-            box-shadow: 0 0 10px rgba(34, 211, 238, 0.5);
-            transition: transform 0.2s ease;
-        }
-        input[type='range']::-webkit-slider-thumb:hover {
-            transform: scale(1.1);
-        }
-
-        .content-section { display: none; animation: fadeIn 0.8s ease; }
-        .content-section.active { display: block; }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes status-fade {
-            0%, 100% { opacity: 0; }
-            10%, 80% { opacity: 1; }
-        }
-
-        .custom-checkbox {
-            accent-color: var(--accent-color-cyan);
-            width: 1.25rem; height: 1.25rem;
-            border-radius: 0.25rem;
-        }
-        label:has(+ .custom-checkbox:checked) {
-            text-decoration: line-through;
-            color: var(--text-secondary);
-            transition: all 0.2s ease;
-        }
-        .sync-status {
-            opacity: 0;
-            transition: opacity 0.5s ease;
-        }
-        .sync-status.visible {
-            opacity: 1;
-        }
-        .sync-status.saving {
-            animation: status-fade 2s infinite;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arca Digital: Guia de Suprimentos</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Bibliotecas para gerar PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #0D0B14;
+      --card-bg-color: rgba(23, 19, 33, 0.6);
+      --border-color: rgba(255, 255, 255, 0.1);
+      --text-primary: #f9fafb;
+      --text-secondary: #a3a3a3;
+      --accent-color-cyan: #22d3ee;
+      --accent-color-purple: #a855f7;
+    }
+    @keyframes aurora {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-primary);
+      padding-top: 80px;
+      overflow-x: hidden;
+      position: relative;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(235deg, #0f0c29, #302b63, #24243e, #0f0c29);
+      background-size: 400% 400%;
+      animation: aurora 20s ease infinite;
+      z-index: -1;
+      opacity: 0.6;
+    }
+    .glass-card {
+      background: var(--card-bg-color);
+      backdrop-filter: blur(16px) saturate(150%);
+      -webkit-backdrop-filter: blur(16px) saturate(150%);
+      border-radius: 1.25rem;
+      border: 1px solid var(--border-color);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .glass-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      border-color: rgba(34, 211, 238, 0.3);
+    }
+    .nav-button {
+      color: var(--text-secondary);
+      font-weight: 500;
+      transition: all 0.2s ease-in-out;
+    }
+    .nav-button.active {
+      color: var(--accent-color-cyan);
+      font-weight: 600;
+    }
+    .nav-button.active svg,
+    .nav-button:hover svg,
+    .nav-button:hover span {
+      color: var(--accent-color-cyan);
+    }
+    .nav-button svg {
+      color: var(--text-secondary);
+      transition: color 0.2s ease-in-out;
+    }
+    .neon-text {
+      color: var(--accent-color-cyan);
+      text-shadow: 0 0 10px rgba(34, 211, 238, 0.5),
+                   0 0 20px rgba(168, 85, 247, 0.3);
+    }
+    input[type='range'] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%; height: 6px;
+      background: linear-gradient(90deg, var(--accent-color-cyan), var(--accent-color-purple));
+      border-radius: 3px; outline: none;
+    }
+    input[type='range']::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 24px; height: 24px;
+      background: var(--text-primary);
+      cursor: pointer; border-radius: 50%;
+      border: 4px solid #302b63;
+      box-shadow: 0 0 10px rgba(34, 211, 238, 0.5);
+      transition: transform 0.2s ease;
+    }
+    input[type='range']::-webkit-slider-thumb:hover {
+      transform: scale(1.1);
+    }
+    .content-section { display: none; animation: fadeIn 0.8s ease; }
+    .content-section.active { display: block; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .glass-pdf-button {
+      padding: 0.5rem 1rem;
+      border-radius: 0.75rem;
+      font-weight: 500;
+      color: var(--text-primary);
+      background: linear-gradient(135deg, rgba(34, 211, 238, 0.3), rgba(168, 85, 247, 0.3));
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+    }
+    .glass-pdf-button:hover {
+      background: linear-gradient(135deg, rgba(34, 211, 238, 0.5), rgba(168, 85, 247, 0.5));
+      box-shadow: 0 0 20px rgba(168, 85, 247, 0.2);
+      transform: translateY(-2px);
+    }
+    .glass-pdf-button:disabled {
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
+  </style>
 </head>
 <body class="antialiased">
 
-    <header class="fixed top-0 left-0 right-0 z-50 bg-[var(--bg-color)]/50 backdrop-blur-lg border-b border-white/10">
-        <div class="container mx-auto px-4">
-            <div class="flex justify-between items-center h-20">
-                <div class="flex items-center space-x-2">
-                    <svg class="h-8 w-8 text-accent-color-cyan" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7V17L12 22L22 17V7L12 2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M2 7L12 12L22 7" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M12 22V12" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
-                    <span class="text-xl font-bold tracking-wider">ARCA</span>
-                </div>
-                <nav id="main-nav" class="flex justify-around md:justify-center items-center md:space-x-2 text-sm md:text-base">
-                    <button data-target="calculadora" class="nav-button active p-2 md:py-2 md:px-4 rounded-lg flex flex-col md:flex-row items-center" title="Calculadora"><svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 15.75V18m-7.5-6.75h.008v.008H8.25v-.008zm0 2.25h.008v.008H8.25v-.008zm0 2.25h.008v.008H8.25v-.008zm0 2.25h.008v.008H8.25v-.008zm2.25-4.5h.008v.008H10.5v-.008zm0 2.25h.008v.008H10.5v-.008zm0 2.25h.008v.008H10.5v-.008zm2.25-4.5h.008v.008H12.75v-.008zm0 2.25h.008v.008H12.75v-.008zm0 2.25h.008v.008H12.75v-.008zM6 18.75h12A2.25 2.25 0 0020.25 16.5V7.5A2.25 2.25 0 0018 5.25H6A2.25 2.25 0 003.75 7.5v9A2.25 2.25 0 006 18.75z" /></svg><span class="hidden md:inline md:ml-2">Calculadora</span></button>
-                    <button data-target="pilares" class="nav-button p-2 md:py-2 md:px-4 rounded-lg flex flex-col md:flex-row items-center" title="Pilares"><svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h12M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-12a2.25 2.25 0 01-2.25-2.25V3m16.5 0v11.25m0 0A2.25 2.25 0 0018 18.75h-12a2.25 2.25 0 00-2.25-2.25m16.5 0V3.75M6 16.5h12M6 16.5H4.5m1.5 0v2.25" /></svg><span class="hidden md:inline md:ml-2">Pilares</span></button>
-                    <button data-target="explorador" class="nav-button p-2 md:py-2 md:px-4 rounded-lg flex flex-col md:flex-row items-center" title="Alimentos"><svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" /></svg><span class="hidden md:inline md:ml-2">Alimentos</span></button>
-                    <button data-target="guia-pratico" class="nav-button p-2 md:py-2 md:px-4 rounded-lg flex flex-col md:flex-row items-center" title="Guia Prático"><svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" /></svg><span class="hidden md:inline md:ml-2">Guia</span></button>
-                    <button data-target="checklist" class="nav-button p-2 md:py-2 md:px-4 rounded-lg flex flex-col md:flex-row items-center" title="Checklist"><svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg><span class="hidden md:inline md:ml-2">Checklist</span></button>
-                </nav>
-            </div>
+  <!-- Header & Navigation -->
+  <header class="fixed top-0 left-0 right-0 z-50 bg-[var(--bg-color)]/50 backdrop-blur-lg border-b border-white/10">
+    <div class="container mx-auto px-4">
+      <div class="flex justify-between items-center h-20">
+        <div class="flex items-center space-x-2">
+          <svg class="h-8 w-8 text-accent-color-cyan" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7V17L12 22L22 17V7L12 2Z" stroke="currentColor" stroke-width="1.5"/><path d="M2 7L12 12L22 7" stroke="currentColor" stroke-width="1.5"/><path d="M12 22V12" stroke="currentColor" stroke-width="1.5"/></svg>
+          <span class="text-xl font-bold tracking-wider">ARCA</span>
         </div>
-    </header>
-
-    <div class="container mx-auto p-4 md:p-8 max-w-7xl">
-        <main>
-            <!-- Sections will be injected here by JS -->
-            <section id="calculadora" class="content-section active">
-                <div class="text-center mb-12">
-                    <h1 class="text-4xl md:text-5xl font-semibold neon-text mb-2">Calculadora de Suprimentos</h1>
-                    <p class="text-lg text-slate-400">Planeje com precisão para o futuro.</p>
-                </div>
-                <div class="glass-card p-6 md:p-8">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                        <div class="space-y-8">
-                            <div>
-                                <label for="pessoas" class="block mb-3 font-medium text-slate-300">Número de Pessoas</label>
-                                <div class="flex items-center gap-4">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-                                    <input type="range" id="pessoas" min="1" max="10" value="2">
-                                    <span id="pessoas-val" class="font-semibold text-lg neon-text w-8 text-center">2</span>
-                                </div>
-                            </div>
-                            <div>
-                                <label for="meses" class="block mb-3 font-medium text-slate-300">Duração do Estoque (meses)</label>
-                                <div class="flex items-center gap-4">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" /></svg>
-                                    <input type="range" id="meses" min="1" max="24" value="3">
-                                    <span id="meses-val" class="font-semibold text-lg neon-text w-8 text-center">3</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="chart-container h-64 md:h-80">
-                                <canvas id="calculatorChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="results" class="mt-12">
-                        <h3 class="text-2xl font-semibold text-center mb-6 neon-text">Estoque Recomendado</h3>
-                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-center">
-                            <div class="bg-white/5 p-4 rounded-lg">
-                                <p class="text-sm text-slate-400">💧 Água Potável</p>
-                                <p id="res-agua" class="text-2xl font-semibold">0 L</p>
-                            </div>
-                            <div class="bg-white/5 p-4 rounded-lg"><p class="text-sm text-slate-400">Grãos</p><p id="res-graos" class="text-2xl font-semibold">0 kg</p></div>
-                            <div class="bg-white/5 p-4 rounded-lg"><p class="text-sm text-slate-400">Leguminosas</p><p id="res-legumes" class="text-2xl font-semibold">0 kg</p></div>
-                            <div class="bg-white/5 p-4 rounded-lg"><p class="text-sm text-slate-400">Gorduras</p><p id="res-gorduras" class="text-2xl font-semibold">0 kg</p></div>
-                            <div class="bg-white/5 p-4 rounded-lg"><p class="text-sm text-slate-400">Açúcares</p><p id="res-acucares" class="text-2xl font-semibold">0 kg</p></div>
-                            <div class="bg-white/5 p-4 rounded-lg"><p class="text-sm text-slate-400">Outros</p><p id="res-outros" class="text-2xl font-semibold">0 kg</p></div>
-                        </div>
-                         <p class="text-xs text-slate-500 text-center mt-4">Cálculos baseados em 2000 kcal e 4L de água por pessoa/dia.</p>
-                    </div>
-                </div>
-            </section>
-
-            <section id="pilares" class="content-section">
-                 <div class="text-center mb-12">
-                    <h1 class="text-4xl md:text-5xl font-semibold neon-text mb-2">Pilares da Conservação</h1>
-                    <p class="text-lg text-slate-400">Os 4 inimigos do armazenamento de longo prazo.</p>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div class="glass-card p-0 flex flex-col">
-                        <img src="https://placehold.co/600x400/0D0B14/22d3ee?text=Temperatura" alt="Ilustração de um termômetro em ambiente frio" class="w-full h-40 object-cover rounded-t-xl">
-                        <div class="p-6 flex-grow">
-                            <h3 class="text-xl font-semibold mb-2">Temperatura</h3>
-                            <p class="text-slate-400">Manter uma temperatura estável e fresca é vital. O ideal é abaixo de 21°C.</p>
-                        </div>
-                    </div>
-                    <div class="glass-card p-0 flex flex-col">
-                        <img src="https://placehold.co/600x400/0D0B14/22d3ee?text=Umidade" alt="Ilustração de gotas de água condensadas" class="w-full h-40 object-cover rounded-t-xl">
-                        <div class="p-6 flex-grow">
-                            <h3 class="text-xl font-semibold mb-2">Umidade</h3>
-                            <p class="text-slate-400">O controle da umidade previne mofo e bolor. Mantenha abaixo de 10%.</p>
-                        </div>
-                    </div>
-                    <div class="glass-card p-0 flex flex-col">
-                        <img src="https://placehold.co/600x400/0D0B14/22d3ee?text=Oxigênio" alt="Ilustração de moléculas de ar sendo removidas de um recipiente" class="w-full h-40 object-cover rounded-t-xl">
-                        <div class="p-6 flex-grow">
-                            <h3 class="text-xl font-semibold mb-2">Oxigênio</h3>
-                            <p class="text-slate-400">Remover o oxigênio impede a oxidação. Use absorvedores de O₂.</p>
-                        </div>
-                    </div>
-                    <div class="glass-card p-0 flex flex-col">
-                        <img src="https://placehold.co/600x400/0D0B14/22d3ee?text=Luz" alt="Ilustração de um recipiente opaco bloqueando raios de sol" class="w-full h-40 object-cover rounded-t-xl">
-                        <div class="p-6 flex-grow">
-                            <h3 class="text-xl font-semibold mb-2">Luz</h3>
-                            <p class="text-slate-400">A exposição à luz degrada nutrientes. Armazene sempre no escuro.</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section id="explorador" class="content-section">
-                <div class="text-center mb-12">
-                    <h1 class="text-4xl md:text-5xl font-semibold neon-text mb-2">Explorador de Alimentos</h1>
-                    <p class="text-lg text-slate-400">Veja a vida útil de diferentes alimentos nas condições ideais.</p>
-                </div>
-                <div class="glass-card p-6 md:p-8">
-                    <div class="flex justify-center flex-wrap gap-2 mb-8">
-                        <button class="filter-btn bg-white/5 text-slate-300 py-2 px-4 rounded-full transition-colors duration-300 hover:bg-white/10" data-category="todos">Todos</button>
-                        <button class="filter-btn bg-white/5 text-slate-300 py-2 px-4 rounded-full transition-colors duration-300 hover:bg-white/10" data-category="superbasicos">30+ Anos</button>
-                        <button class="filter-btn bg-white/5 text-slate-300 py-2 px-4 rounded-full transition-colors duration-300 hover:bg-white/10" data-category="media">10-20 Anos</button>
-                        <button class="filter-btn bg-white/5 text-slate-300 py-2 px-4 rounded-full transition-colors duration-300 hover:bg-white/10" data-category="rapida">Até 5 Anos</button>
-                    </div>
-                    <div class="lg:flex lg:gap-8">
-                        <div class="lg:w-2/3">
-                            <div class="chart-container">
-                                <canvas id="foodChart"></canvas>
-                            </div>
-                        </div>
-                        <div class="lg:w-1/3 mt-8 lg:mt-0">
-                            <h3 class="font-semibold text-lg mb-4">Lista de Alimentos:</h3>
-                            <ul id="foodList" class="space-y-2 max-h-96 overflow-y-auto pr-2"></ul>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section id="guia-pratico" class="content-section">
-                <div class="text-center mb-12">
-                    <h1 class="text-4xl md:text-5xl font-semibold neon-text mb-2">Guia Prático de Embalagem</h1>
-                    <p class="text-lg text-slate-400">Siga estes passos para garantir a máxima durabilidade dos seus suprimentos.</p>
-                </div>
-                <div class="glass-card p-6 md:p-8">
-                    <div class="grid md:grid-cols-2 gap-8 items-center">
-                        <div class="order-2 md:order-1">
-                            <h3 class="text-2xl font-semibold mb-4 text-cyan-300">Passo a Passo</h3>
-                            <ul class="space-y-4">
-                                <li class="flex items-start space-x-3">
-                                    <span class="font-bold text-cyan-300 text-2xl">1</span>
-                                    <div><h4 class="font-semibold">Prepare os Materiais</h4><p class="text-slate-400 text-sm">Tenha em mãos baldes de grau alimentício, sacos Mylar, absorvedores de O₂ e uma seladora.</p></div>
-                                </li>
-                                <li class="flex items-start space-x-3">
-                                    <span class="font-bold text-cyan-300 text-2xl">2</span>
-                                    <div><h4 class="font-semibold">Encha o Saco Mylar</h4><p class="text-slate-400 text-sm">Coloque o alimento seco no saco, deixando espaço no topo para selar.</p></div>
-                                </li>
-                                <li class="flex items-start space-x-3">
-                                    <span class="font-bold text-cyan-300 text-2xl">3</span>
-                                    <div><h4 class="font-semibold">Adicione o Absorvedor</h4><p class="text-slate-400 text-sm">Coloque um absorvedor de oxigênio por cima do alimento antes de fechar.</p></div>
-                                </li>
-                                <li class="flex items-start space-x-3">
-                                    <span class="font-bold text-cyan-300 text-2xl">4</span>
-                                    <div><h4 class="font-semibold">Sele e Armazene</h4><p class="text-slate-400 text-sm">Retire o excesso de ar e sele o saco com calor. Coloque no balde, feche bem e etiquete com o conteúdo e a data.</p></div>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="order-1 md:order-2">
-                             <img src="img/suk7hdsuk7hdsuk7.png" alt="Ilustração do processo de embalagem de alimentos em sacos Mylar" class="w-full h-auto object-cover rounded-2xl shadow-lg shadow-purple-500/20">
-                        </div>
-                    </div>
-                </div>
-            </section>
-            
-            <section id="checklist" class="content-section">
-                <div class="text-center mb-12">
-                    <h1 class="text-4xl md:text-5xl font-semibold neon-text mb-2">Checklist de Emergência</h1>
-                    <p class="text-lg text-slate-400">Seu progresso é salvo na nuvem automaticamente.</p>
-                </div>
-                <div class="glass-card p-6 md:p-8 max-w-4xl mx-auto">
-                    <div class="flex justify-between items-center mb-2">
-                        <p id="checklist-progress-text" class="text-left text-sm text-slate-400">0% Completo</p>
-                        <div id="sync-status" class="sync-status text-xs text-slate-500 flex items-center space-x-1">
-                            <svg class="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                            <span>Salvando...</span>
-                        </div>
-                    </div>
-                    <div class="w-full bg-slate-700 rounded-full h-2.5">
-                        <div id="checklist-progress-bar" class="bg-gradient-to-r from-accent-color-cyan to-accent-color-purple h-2.5 rounded-full transition-all duration-500" style="width: 0%;"></div>
-                    </div>
-                    
-                    <div id="checklist-container" class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        <div class="space-y-3">
-                            <h3 class="font-semibold text-xl text-cyan-300 border-b border-cyan-300/20 pb-2">💧 Água</h3>
-                            <ul class="space-y-2 pt-2"><li class="flex items-center space-x-3"><input type="checkbox" id="chk-agua-1" class="custom-checkbox"><label for="chk-agua-1">4L de água por pessoa/dia</label></li><li class="flex items-center space-x-3"><input type="checkbox" id="chk-agua-2" class="custom-checkbox"><label for="chk-agua-2">Filtro de água portátil</label></li><li class="flex items-center space-x-3"><input type="checkbox" id="chk-agua-3" class="custom-checkbox"><label for="chk-agua-3">Pastilhas de purificação</label></li></ul>
-                        </div>
-                        <div class="space-y-3">
-                            <h3 class="font-semibold text-xl text-cyan-300 border-b border-cyan-300/20 pb-2">🥫 Comida</h3>
-                            <ul class="space-y-2 pt-2"><li class="flex items-center space-x-3"><input type="checkbox" id="chk-comida-1" class="custom-checkbox"><label for="chk-comida-1">Estoque para 3 dias (mínimo)</label></li><li class="flex items-center space-x-3"><input type="checkbox" id="chk-comida-2" class="custom-checkbox"><label for="chk-comida-2">Abridor de latas manual</label></li><li class="flex items-center space-x-3"><input type="checkbox" id="chk-comida-3" class="custom-checkbox"><label for="chk-comida-3">Comida para pets</label></li><li class="flex items-center space-x-3"><input type="checkbox" id="chk-comida-4" class="custom-checkbox"><label for="chk-comida-4">Barras de proteína</label></li></ul>
-                        </div>
-                        <div class="space-y-3">
-                            <h3 class="font-semibold text-xl text-cyan-300 border-b border-cyan-300/20 pb-2">⚕️ Primeiros Socorros</h3>
-                            <ul class="space-y-2 pt-2"><li class="flex items-center space-x-3"><input type="checkbox" id="chk-socorros-1" class="custom-checkbox"><label for="chk-socorros-1">Kit de primeiros socorros</label></li><li class="flex items-center space-x-3"><input type="checkbox" id="chk-socorros-2" class="custom-checkbox"><label for="chk-socorros-2">Medicamentos prescritos</label></li><li class="flex items-center space-x-3"><input type="checkbox" id="chk-socorros-3" class="custom-checkbox"><label for="chk-socorros-3">Analgésicos e antissépticos</label></li><li class="flex items-center space-x-3"><input type="checkbox" id="chk-socorros-4" class="custom-checkbox"><label for="chk-socorros-4">Gaze e ataduras</label></li></ul>
-                        </div>
-                        <div class="space-y-3">
-                            <h3 class="font-semibold text-xl text-cyan-300 border-b border-cyan-300/20 pb-2">🛠️ Ferramentas</h3>
-                            <ul class="space-y-2 pt-2"><li class="flex items-center space-x-3"><input type="checkbox" id="chk-ferramentas-1" class="custom-checkbox"><label for="chk-ferramentas-1">Lanterna e pilhas extras</label></li><li class="flex items-center space-x-3"><input type="checkbox" id="chk-ferramentas-2" class="custom-checkbox"><label for="chk-ferramentas-2">Rádio a pilha ou manivela</label></li><li class="flex items-center space-x-3"><input type="checkbox" id="chk-ferramentas-3" class="custom-checkbox"><label for="chk-ferramentas-3">Canivete multifuncional</label></li><li class="flex items-center space-x-3"><input type="checkbox" id="chk-ferramentas-4" class="custom-checkbox"><label for="chk-ferramentas-4">Isqueiro ou pederneira</label></li></ul>
-                        </div>
-                        <div class="space-y-3">
-                            <h3 class="font-semibold text-xl text-cyan-300 border-b border-cyan-300/20 pb-2">🧼 Higiene</h3>
-                            <ul class="space-y-2 pt-2"><li class="flex items-center space-x-3"><input type="checkbox" id="chk-higiene-1" class="custom-checkbox"><label for="chk-higiene-1">Lenços umedecidos</label></li><li class="flex items-center space-x-3"><input type="checkbox" id="chk-higiene-2" class="custom-checkbox"><label for="chk-higiene-2">Papel higiênico</label></li><li class="flex items-center space-x-3"><input type="checkbox" id="chk-higiene-3" class="custom-checkbox"><label for="chk-higiene-3">Sacos de lixo</label></li><li class="flex items-center space-x-3"><input type="checkbox" id="chk-higiene-4" class="custom-checkbox"><label for="chk-higiene-4">Sabonete / Álcool em gel</label></li></ul>
-                        </div>
-                        <div class="space-y-3">
-                            <h3 class="font-semibold text-xl text-cyan-300 border-b border-cyan-300/20 pb-2">📄 Documentos</h3>
-                            <ul class="space-y-2 pt-2"><li class="flex items-center space-x-3"><input type="checkbox" id="chk-docs-1" class="custom-checkbox"><label for="chk-docs-1">Cópias de documentos</label></li><li class="flex items-center space-x-3"><input type="checkbox" id="chk-docs-2" class="custom-checkbox"><label for="chk-docs-2">Dinheiro em espécie</label></li><li class="flex items-center space-x-3"><input type="checkbox" id="chk-docs-3" class="custom-checkbox"><label for="chk-docs-3">Contatos de emergência</label></li></ul>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </main>
-
-        <footer class="text-center mt-16 pt-8 border-t border-white/10">
-            <p class="text-slate-400">Arca Digital - Uma nova era no planejamento de suprimentos.</p>
-        </footer>
+        <nav id="main-nav" class="flex-grow flex justify-around md:justify-center items-center md:space-x-2 text-sm md:text-base">
+          <button data-target="calculadora" class="nav-button active p-2 md:py-2 md:px-4 rounded-lg flex flex-col md:flex-row items-center" title="Calculadora">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 15.75V18m-7.5-6.75h.008v.008H8.25v-.008zm0 2.25h.008v.008H8.25v-.008zm0 2.25h.008v.008H8.25v-.008zm0 2.25h.008v.008H8.25v-.008zm2.25-4.5h.008v.008H10.5v-.008zm0 2.25h.008v.008H10.5v-.008zm0 2.25h.008v.008H10.5v-.008zm2.25-4.5h.008v.008H12.75v-.008zm0 2.25h.008v.008H12.75v-.008zm0 2.25h.008v.008H12.75v-.008zM6 18.75h12A2.25 2.25 0 0020.25 16.5V7.5A2.25 2.25 0 0018 5.25H6A2.25 2.25 0 003.75 7.5v9A2.25 2.25 0 006 18.75z"/></svg>
+            <span class="hidden md:inline md:ml-2">Calculadora</span>
+          </button>
+          <button data-target="pilares" class="nav-button p-2 md:py-2 md:px-4 rounded-lg flex flex-col md:flex-row items-center" title="Pilares">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h12M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-12a2.25 2.25 0 01-2.25-2.25V3m16.5 0v11.25m0 0A2.25 2.25 0 0018 18.75h-12a2.25 2.25 0 00-2.25-2.25m16.5 0V3.75M6 16.5h12M6 16.5H4.5m1.5 0v2.25"/></svg>
+            <span class="hidden md:inline md:ml-2">Pilares</span>
+          </button>
+          <button data-target="explorador" class="nav-button p-2 md:py-2 md:px-4 rounded-lg flex flex-col md:flex-row items-center" title="Alimentos">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>
+            <span class="hidden md:inline md:ml-2">Alimentos</span>
+          </button>
+          <button data-target="guia-pratico" class="nav-button p-2 md:py-2 md:px-4 rounded-lg flex flex-col md:flex-row items-center" title="Guia Prático">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></svg>
+            <span class="hidden md:inline md:ml-2">Guia</span>
+          </button>
+          <button data-target="checklist" class="nav-button p-2 md:py-2 md:px-4 rounded-lg flex flex-col md:flex-row items-center" title="Checklist">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span class="hidden md:inline md:ml-2">Checklist</span>
+          </button>
+        </nav>
+        <!-- Botão Gerar PDF -->
+        <div class="pl-4">
+            <button id="generate-pdf-btn" class="glass-pdf-button flex">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M10.75 2.75a.75.75 0 00-1.5 0v8.614L6.295 8.235a.75.75 0 10-1.09 1.03l4.25 4.5a.75.75 0 001.09 0l4.25-4.5a.75.75 0 00-1.09-1.03l-2.955 3.129V2.75z" />
+                    <path d="M3.5 12.75a.75.75 0 00-1.5 0v2.5A2.75 2.75 0 004.75 18h10.5A2.75 2.75 0 0018 15.25v-2.5a.75.75 0 00-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5z" />
+                </svg>
+                <span class="hidden lg:inline">Gerar PDF</span>
+            </button>
+        </div>
+      </div>
     </div>
+  </header>
 
-    <!-- Floating PDF Button -->
-    <button id="generate-pdf-btn" title="Gerar Relatório em PDF" class="hidden fixed bottom-8 right-8 bg-gradient-to-r from-accent-color-cyan to-accent-color-purple text-white p-4 rounded-full shadow-lg hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-bg-color focus:ring-cyan-400 transition-all duration-300 z-50">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-    </button>
+  <!-- Main Content -->
+  <div class="container mx-auto p-4 md:p-8 max-w-7xl">
+    <main>
 
+      <!-- Calculadora -->
+      <section id="calculadora" class="content-section active">
+        <div class="text-center mb-12">
+          <h1 class="text-4xl md:text-5xl font-semibold neon-text mb-2">Calculadora de Suprimentos</h1>
+          <p class="text-lg text-slate-400">Planeje com precisão para o futuro.</p>
+        </div>
+        <div class="glass-card p-6 md:p-8">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+            <div class="space-y-8">
+              <div>
+                <label for="pessoas" class="block mb-3 font-medium text-slate-300">Número de Pessoas</label>
+                <div class="flex items-center gap-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                  <input type="range" id="pessoas" min="1" max="100" value="2">
+                  <span id="pessoas-val" class="font-semibold text-lg neon-text w-8 text-center">2</span>
+                </div>
+              </div>
+              <div>
+                <label for="meses" class="block mb-3 font-medium text-slate-300">Duração do Estoque (meses)</label>
+                <div class="flex items-center gap-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>
+                  <input type="range" id="meses" min="1" max="120" value="3">
+                  <span id="meses-val" class="font-semibold text-lg neon-text w-8 text-center">3</span>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div class="chart-container h-64 md:h-80">
+                <canvas id="calculatorChart"></canvas>
+              </div>
+            </div>
+          </div>
+          <div id="results" class="mt-12">
+            <h3 class="text-2xl font-semibold text-center mb-6 neon-text">Estoque Recomendado</h3>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-center">
+              <div class="bg-white/5 p-4 rounded-lg">
+                <p class="text-sm text-slate-400">💧 Água Potável</p>
+                <p id="res-agua" class="text-2xl font-semibold">0 L</p>
+              </div>
+              <div class="bg-white/5 p-4 rounded-lg">
+                <p class="text-sm text-slate-400">Grãos</p>
+                <p id="res-graos" class="text-2xl font-semibold">0 kg</p>
+              </div>
+              <div class="bg-white/5 p-4 rounded-lg">
+                <p class="text-sm text-slate-400">Leguminosas</p>
+                <p id="res-legumes" class="text-2xl font-semibold">0 kg</p>
+              </div>
+              <div class="bg-white/5 p-4 rounded-lg">
+                <p class="text-sm text-slate-400">Gorduras</p>
+                <p id="res-gorduras" class="text-2xl font-semibold">0 kg</p>
+              </div>
+              <div class="bg-white/5 p-4 rounded-lg">
+                <p class="text-sm text-slate-400">Açúcares</p>
+                <p id="res-acucares" class="text-2xl font-semibold">0 kg</p>
+              </div>
+              <div class="bg-white/5 p-4 rounded-lg">
+                <p class="text-sm text-slate-400">Outros</p>
+                <p id="res-outros" class="text-2xl font-semibold">0 kg</p>
+              </div>
+            </div>
+            <p class="text-xs text-slate-500 text-center mt-4">Cálculos baseados em 2000 kcal e 4L de água por pessoa/dia.</p>
+          </div>
+        </div>
+      </section>
 
-    <script type="module">
-        // Import Firebase modules
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+      <!-- Pilares -->
+      <section id="pilares" class="content-section">
+        <div class="text-center mb-12">
+          <h1 class="text-4xl md:text-5xl font-semibold neon-text mb-2">Pilares da Conservação</h1>
+          <p class="text-lg text-slate-400">Os 4 inimigos do armazenamento de longo prazo.</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div class="glass-card p-0 flex flex-col">
+            <img src="https://placehold.co/600x400/0D0B14/22d3ee?text=Temperatura" alt="Termômetro em ambiente frio" class="w-full h-40 object-cover rounded-t-xl" onerror="this.onerror=null;this.src='https://placehold.co/600x400/f3f4f6/111827?text=Imagem+Indisponível';">
+            <div class="p-6 flex-grow">
+              <h3 class="text-xl font-semibold mb-2">Temperatura</h3>
+              <p class="text-slate-400">Manter temperatura estável e fresca é vital. Ideal abaixo de 21°C.</p>
+            </div>
+          </div>
+          <div class="glass-card p-0 flex flex-col">
+            <img src="https://placehold.co/600x400/0D0B14/22d3ee?text=Umidade" alt="Gotas de condensação" class="w-full h-40 object-cover rounded-t-xl" onerror="this.onerror=null;this.src='https://placehold.co/600x400/f3f4f6/111827?text=Imagem+Indisponível';">
+            <div class="p-6 flex-grow">
+              <h3 class="text-xl font-semibold mb-2">Umidade</h3>
+              <p class="text-slate-400">Controle da umidade previne mofo e bolor. Mantenha abaixo de 10%.</p>
+            </div>
+          </div>
+          <div class="glass-card p-0 flex flex-col">
+            <img src="https://placehold.co/600x400/0D0B14/22d3ee?text=Oxigênio" alt="Absorvendo oxigênio" class="w-full h-40 object-cover rounded-t-xl" onerror="this.onerror=null;this.src='https://placehold.co/600x400/f3f4f6/111827?text=Imagem+Indisponível';">
+            <div class="p-6 flex-grow">
+              <h3 class="text-xl font-semibold mb-2">Oxigênio</h3>
+              <p class="text-slate-400">Remover oxigênio impede oxidação. Use absorvedores de O₂.</p>
+            </div>
+          </div>
+          <div class="glass-card p-0 flex flex-col">
+            <img src="https://placehold.co/600x400/0D0B14/22d3ee?text=Luz" alt="Recipiente opaco bloqueando luz" class="w-full h-40 object-cover rounded-t-xl" onerror="this.onerror=null;this.src='https://placehold.co/600x400/f3f4f6/111827?text=Imagem+Indisponível';">
+            <div class="p-6 flex-grow">
+              <h3 class="text-xl font-semibold mb-2">Luz</h3>
+              <p class="text-slate-400">Exposição à luz degrada nutrientes. Armazene sempre no escuro.</p>
+            </div>
+          </div>
+        </div>
+      </section>
 
-        // Firebase and App State
-        let db, auth, userId;
-        
-        // --- Firebase Initialization ---
-        async function initFirebase() {
+      <!-- Explorador de Alimentos -->
+      <section id="explorador" class="content-section">
+        <div class="text-center mb-12">
+          <h1 class="text-4xl md:text-5xl font-semibold neon-text mb-2">Explorador de Alimentos</h1>
+          <p class="text-lg text-slate-400">Veja a vida útil de diferentes alimentos nas condições ideais.</p>
+        </div>
+        <div class="glass-card p-6 md:p-8">
+          <div class="flex justify-center flex-wrap gap-2 mb-8">
+            <button class="filter-btn bg-white/5 text-slate-300 py-2 px-4 rounded-full hover:bg-white/10" data-category="todos">Todos</button>
+            <button class="filter-btn bg-white/5 text-slate-300 py-2 px-4 rounded-full hover:bg-white/10" data-category="superbasicos">30+ Anos</button>
+            <button class="filter-btn bg-white/5 text-slate-300 py-2 px-4 rounded-full hover:bg-white/10" data-category="media">10-20 Anos</button>
+            <button class="filter-btn bg-white/5 text-slate-300 py-2 px-4 rounded-full hover:bg-white/10" data-category="rapida">Até 5 Anos</button>
+          </div>
+          <div class="lg:flex lg:gap-8">
+            <div class="lg:w-2/3">
+              <div class="chart-container h-80">
+                <canvas id="foodChart"></canvas>
+              </div>
+            </div>
+            <div class="lg:w-1/3 mt-8 lg:mt-0">
+              <h3 class="font-semibold text-lg mb-4">Lista de Alimentos:</h3>
+              <ul id="foodList" class="space-y-2 max-h-96 overflow-y-auto pr-2"></ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Guia Prático -->
+      <section id="guia-pratico" class="content-section">
+        <div class="text-center mb-12">
+          <h1 class="text-4xl md:text-5xl font-semibold neon-text mb-2">Guia Prático de Embalagem</h1>
+          <p class="text-lg text-slate-400">Siga estes passos para garantir máxima durabilidade.</p>
+        </div>
+        <div class="glass-card p-6 md:p-8">
+          <div class="grid md:grid-cols-2 gap-8 items-center">
+            <div class="order-2 md:order-1">
+              <h3 class="text-2xl font-semibold mb-4 text-cyan-300">Passo a Passo</h3>
+              <ul class="space-y-4">
+                <li class="flex items-start space-x-3">
+                  <span class="font-bold text-cyan-300 text-2xl">1</span>
+                  <div>
+                    <h4 class="font-semibold">Prepare os Materiais</h4>
+                    <p class="text-slate-400 text-sm">Baldes alimentícios, sacos Mylar, absorvedores de O₂ e seladora.</p>
+                  </div>
+                </li>
+                <li class="flex items-start space-x-3">
+                  <span class="font-bold text-cyan-300 text-2xl">2</span>
+                  <div>
+                    <h4 class="font-semibold">Encha o Saco Mylar</h4>
+                    <p class="text-slate-400 text-sm">Coloque alimento seco no saco, deixando topo livre para selar.</p>
+                  </div>
+                </li>
+                <li class="flex items-start space-x-3">
+                  <span class="font-bold text-cyan-300 text-2xl">3</span>
+                  <div>
+                    <h4 class="font-semibold">Adicione o Absorvedor</h4>
+                    <p class="text-slate-400 text-sm">Coloque absorvedor de oxigênio antes de fechar.</p>
+                  </div>
+                </li>
+                <li class="flex items-start space-x-3">
+                  <span class="font-bold text-cyan-300 text-2xl">4</span>
+                  <div>
+                    <h4 class="font-semibold">Sele e Armazene</h4>
+                    <p class="text-slate-400 text-sm">Retire ar, sele com calor, coloque no balde e etiquete.</p>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="order-1 md:order-2">
+              <img src="https://placehold.co/800x600/302b63/f9fafb?text=Embalagem+Mylar" alt="Processo de embalagem em Mylar" class="w-full h-auto object-cover rounded-2xl shadow-lg shadow-purple-500/20" onerror="this.onerror=null;this.src='https://placehold.co/800x600/f3f4f6/111827?text=Imagem+Indisponível';">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Checklist -->
+      <section id="checklist" class="content-section">
+        <div class="text-center mb-12">
+          <h1 class="text-4xl md:text-5xl font-semibold neon-text mb-2">Checklist de Emergência</h1>
+          <p class="text-lg text-slate-400">Progresso salvo automaticamente na nuvem.</p>
+        </div>
+        <div class="glass-card p-6 md:p-8 max-w-4xl mx-auto">
+          <div class="flex justify-between items-center mb-2">
+            <p id="checklist-progress-text" class="text-left text-sm text-slate-400">0% Completo</p>
+            <div id="sync-status" class="sync-status text-xs text-slate-500 flex items-center space-x-1" aria-live="polite">
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle class="opacity-25" cx="12" cy="12" r="10" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/></svg>
+              <span>Pronto</span>
+            </div>
+          </div>
+          <div class="w-full bg-slate-700 rounded-full h-2.5">
+            <div
+              id="checklist-progress-bar"
+              class="h-2.5 rounded-full transition-all duration-500"
+              style="width: 0%; background: linear-gradient(to right, var(--accent-color-cyan), var(--accent-color-purple));"
+            ></div>
+          </div>
+          <div id="checklist-container" class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Água -->
+            <div class="space-y-3">
+              <h3 class="font-semibold text-xl text-cyan-300 border-b border-cyan-300/20 pb-2">💧 Água</h3>
+              <ul class="space-y-2 pt-2">
+                <li class="flex items-center space-x-3"><input type="checkbox" id="chk-agua-1" class="custom-checkbox"><label for="chk-agua-1">4L de água por pessoa/dia</label></li>
+                <li class="flex items-center space-x-3"><input type="checkbox" id="chk-agua-2" class="custom-checkbox"><label for="chk-agua-2">Filtro de água portátil</label></li>
+                <li class="flex items-center space-x-3"><input type="checkbox" id="chk-agua-3" class="custom-checkbox"><label for="chk-agua-3">Pastilhas de purificação</label></li>
+              </ul>
+            </div>
+            <!-- Comida -->
+            <div class="space-y-3">
+              <h3 class="font-semibold text-xl text-cyan-300 border-b border-cyan-300/20 pb-2">🥫 Comida</h3>
+              <ul class="space-y-2 pt-2">
+                <li class="flex items-center space-x-3"><input type="checkbox" id="chk-comida-1" class="custom-checkbox"><label for="chk-comida-1">Estoque para 3 dias (mínimo)</label></li>
+                <li class="flex items-center space-x-3"><input type="checkbox" id="chk-comida-2" class="custom-checkbox"><label for="chk-comida-2">Abridor de latas manual</label></li>
+                <li class="flex items-center space-x-3"><input type="checkbox" id="chk-comida-3" class="custom-checkbox"><label for="chk-comida-3">Comida para pets</label></li>
+                <li class="flex items-center space-x-3"><input type="checkbox" id="chk-comida-4" class="custom-checkbox"><label for="chk-comida-4">Barras de proteína</label></li>
+              </ul>
+            </div>
+            <!-- Primeiros Socorros -->
+            <div class="space-y-3">
+              <h3 class="font-semibold text-xl text-cyan-300 border-b border-cyan-300/20 pb-2">⚕️ Primeiros Socorros</h3>
+              <ul class="space-y-2 pt-2">
+                <li class="flex items-center space-x-3"><input type="checkbox" id="chk-socorros-1" class="custom-checkbox"><label for="chk-socorros-1">Kit de primeiros socorros</label></li>
+                <li class="flex items-center space-x-3"><input type="checkbox" id="chk-socorros-2" class="custom-checkbox"><label for="chk-socorros-2">Medicamentos prescritos</label></li>
+                <li class="flex items-center space-x-3"><input type="checkbox" id="chk-socorros-3" class="custom-checkbox"><label for="chk-socorros-3">Analgésicos e antissépticos</label></li>
+                <li class="flex items-center space-x-3"><input type="checkbox" id="chk-socorros-4" class="custom-checkbox"><label for="chk-socorros-4">Gaze e ataduras</label></li>
+              </ul>
+            </div>
+            <!-- Ferramentas -->
+            <div class="space-y-3">
+              <h3 class="font-semibold text-xl text-cyan-300 border-b border-cyan-300/20 pb-2">🛠️ Ferramentas</h3>
+              <ul class="space-y-2 pt-2">
+                <li class="flex items-center space-x-3"><input type="checkbox" id="chk-ferramentas-1" class="custom-checkbox"><label for="chk-ferramentas-1">Lanterna e pilhas extras</label></li>
+                <li class="flex items-center space-x-3"><input type="checkbox" id="chk-ferramentas-2" class="custom-checkbox"><label for="chk-ferramentas-2">Rádio a pilha ou manivela</label></li>
+                <li class="flex items-center space-x-3"><input type="checkbox" id="chk-ferramentas-3" class="custom-checkbox"><label for="chk-ferramentas-3">Canivete multifuncional</label></li>
+                <li class="flex items-center space-x-3"><input type="checkbox" id="chk-ferramentas-4" class="custom-checkbox"><label for="chk-ferramentas-4">Isqueiro ou pederneira</label></li>
+              </ul>
+            </div>
+            <!-- Higiene -->
+            <div class="space-y-3">
+              <h3 class="font-semibold text-xl text-cyan-300 border-b border-cyan-300/20 pb-2">🧼 Higiene</h3>
+              <ul class="space-y-2 pt-2">
+                <li class="flex items-center space-x-3"><input type="checkbox" id="chk-higiene-1" class="custom-checkbox"><label for="chk-higiene-1">Lenços umedecidos</label></li>
+                <li class="flex items-center space-x-3"><input type="checkbox" id="chk-higiene-2" class="custom-checkbox"><label for="chk-higiene-2">Papel higiênico</label></li>
+                <li class="flex items-center space-x-3"><input type="checkbox" id="chk-higiene-3" class="custom-checkbox"><label for="chk-higiene-3">Sacos de lixo</label></li>
+                <li class="flex items-center space-x-3"><input type="checkbox" id="chk-higiene-4" class="custom-checkbox"><label for="chk-higiene-4">Sabonete / Álcool em gel</label></li>
+              </ul>
+            </div>
+            <!-- Documentos -->
+            <div class="space-y-3">
+              <h3 class="font-semibold text-xl text-cyan-300 border-b border-cyan-300/20 pb-2">📄 Documentos</h3>
+              <ul class="space-y-2 pt-2">
+                <li class="flex items-center space-x-3"><input type="checkbox" id="chk-docs-1" class="custom-checkbox"><label for="chk-docs-1">Cópias de documentos</label></li>
+                <li class="flex items-center space-x-3"><input type="checkbox" id="chk-docs-2" class="custom-checkbox"><label for="chk-docs-2">Dinheiro em espécie</label></li>
+                <li class="flex items-center space-x-3"><input type="checkbox" id="chk-docs-3" class="custom-checkbox"><label for="chk-docs-3">Contatos de emergência</label></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center mt-16 pt-8 border-t border-white/10">
+      <p class="text-slate-400">Arca Digital - Uma nova era no planejamento de suprimentos.</p>
+    </footer>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    let db, auth, userId;
+    let charts = {}; // Objeto para armazenar instâncias dos gráficos
+
+    async function initFirebase() {
+      try {
+        const firebaseConfig = JSON.parse(window.__firebase_config || "{}");
+        const app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+        auth = getAuth(app);
+        return new Promise((resolve, reject) => {
+          onAuthStateChanged(auth, async (user) => {
             try {
-                const firebaseConfig = JSON.parse(window.__firebase_config);
-                const appId = window.__app_id || 'default-app-id';
-                
-                const app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-
-                return new Promise((resolve) => {
-                    onAuthStateChanged(auth, async (user) => {
-                        if (user) {
-                            userId = user.uid;
-                            resolve(userId);
-                        } else {
-                            if (window.__initial_auth_token) {
-                                await signInWithCustomToken(auth, window.__initial_auth_token);
-                            } else {
-                                await signInAnonymously(auth);
-                            }
-                        }
-                    });
-                });
-            } catch (error) {
-                console.error("Firebase Init Error:", error);
+              if (user) {
+                userId = user.uid;
+                resolve(userId);
+              } else {
+                if (window.__initial_auth_token) {
+                  await signInWithCustomToken(auth, window.__initial_auth_token);
+                } else {
+                  await signInAnonymously(auth);
+                }
+              }
+            } catch (e) {
+              reject(e);
             }
+          }, reject);
+        });
+      } catch (error) {
+        console.error("Firebase Init Error:", error);
+      }
+    }
+
+    // === [INÍCIO] LÓGICA FINAL E ROBUSTA PARA GERAR PDF ===
+    async function generatePDF() {
+        const button = document.getElementById('generate-pdf-btn');
+        const originalButtonContent = button.innerHTML;
+        button.innerHTML = `
+            <svg class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="color: white;"><path class="opacity-75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" fill="currentColor"></path></svg>
+            <span class="hidden lg:inline">Gerando...</span>
+        `;
+        button.disabled = true;
+
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        
+        // --- FUNÇÕES AUXILIARES PARA DESENHAR O PDF ---
+        const MARGIN = 15;
+        const PAGE_WIDTH = pdf.internal.pageSize.getWidth();
+        let yPos = 0;
+        
+        // Função para remover emojis de uma string
+        function removeEmojis(str) {
+            if (!str) return '';
+            // Regex para remover a maioria dos emojis e símbolos comuns
+            return str.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF]|\uFE0F)/g, '').trim();
         }
 
+        function addHeader() {
+            pdf.setFontSize(22);
+            pdf.setTextColor('#111827');
+            pdf.text("Relatório da Arca Digital", PAGE_WIDTH / 2, 20, { align: 'center' });
+            
+            pdf.setFontSize(10);
+            pdf.setTextColor('#6b7280');
+            const dateString = new Date().toLocaleString('pt-BR');
+            pdf.text(`Gerado em: ${dateString}`, PAGE_WIDTH / 2, 28, { align: 'center' });
+            
+            pdf.setDrawColor('#e5e7eb');
+            pdf.line(MARGIN, 35, PAGE_WIDTH - MARGIN, 35);
+            yPos = 45;
+        }
 
-        document.addEventListener('DOMContentLoaded', async function () {
-            await initFirebase();
-            initNavigation();
-            initCalculator();
-            initFoodExplorer();
-            initChecklist();
-            initPdfGenerator(); // Initialize PDF button logic
+        function addSectionTitle(title) {
+            if (yPos > 250) { // Adiciona nova página se não houver espaço
+                pdf.addPage();
+                addHeader();
+            }
+            pdf.setFontSize(16);
+            pdf.setTextColor('#0891b2');
+            pdf.text(title, MARGIN, yPos);
+            yPos += 10;
+        }
+
+        function addText(text, size = 10, color = '#374151') {
+             if (yPos > 270) {
+                pdf.addPage();
+                addHeader();
+            }
+            pdf.setFontSize(size);
+            pdf.setTextColor(color);
+            // Divide o texto em linhas para caber na página
+            const splitText = pdf.splitTextToSize(text, PAGE_WIDTH - MARGIN * 2);
+            pdf.text(splitText, MARGIN, yPos);
+            yPos += (splitText.length * (size / 2.5)); // Incrementa yPos baseado no número de linhas
+        }
+        
+        async function captureChart(chartId) {
+            const chartInstance = charts[chartId];
+            if (!chartInstance) return null;
+
+            // Create a temporary canvas to draw a clean version of the chart
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = 800;
+            tempCanvas.height = 400;
+            
+            const tempCtx = tempCanvas.getContext('2d');
+            // Fill background for charts that might have transparent parts
+            tempCtx.fillStyle = 'white';
+            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+            const printConfig = JSON.parse(JSON.stringify(chartInstance.config._config));
+            printConfig.options.animation = false;
+            printConfig.options.responsive = false;
+            printConfig.options.maintainAspectRatio = false;
+            
+            // Apply print-friendly colors
+            if (printConfig.options.plugins && printConfig.options.plugins.legend && printConfig.options.plugins.legend.labels) {
+                printConfig.options.plugins.legend.labels.color = '#333';
+            }
+            if (printConfig.options.scales) {
+                Object.values(printConfig.options.scales).forEach(axis => {
+                    if(axis.ticks) axis.ticks.color = '#333';
+                    if(axis.title) axis.title.color = '#333';
+                    if(axis.grid) axis.grid.color = '#ddd';
+                });
+            }
+
+            const tempChart = new Chart(tempCtx, printConfig);
+
+            // Give it a moment to render fully before capturing
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            const dataUrl = tempChart.toBase64Image();
+            
+            tempChart.destroy();
+            
+            return dataUrl;
+        }
+
+        // --- INÍCIO DA GERAÇÃO DO DOCUMENTO ---
+        
+        addHeader();
+
+        // 1. Seção da Calculadora
+        addSectionTitle("Calculadora de Suprimentos");
+        const pessoas = document.getElementById('pessoas-val').textContent;
+        const meses = document.getElementById('meses-val').textContent;
+        addText(`Parâmetros: ${pessoas} pessoas por ${meses} meses.`);
+        yPos += 5;
+
+        const results = [
+            { label: 'Água Potável', value: document.getElementById('res-agua').textContent },
+            { label: 'Grãos', value: document.getElementById('res-graos').textContent },
+            { label: 'Leguminosas', value: document.getElementById('res-legumes').textContent },
+            { label: 'Gorduras', value: document.getElementById('res-gorduras').textContent },
+            { label: 'Açúcares', value: document.getElementById('res-acucares').textContent },
+            { label: 'Outros', value: document.getElementById('res-outros').textContent },
+        ];
+        
+        let initialY = yPos;
+        for(let i = 0; i < results.length; i++) {
+            const col = i % 2;
+            const row = Math.floor(i / 2);
+            pdf.setFontSize(10).setTextColor('#6b7280').text(removeEmojis(results[i].label), MARGIN + (col * 90), initialY + (row * 15));
+            pdf.setFontSize(12).setTextColor('#111827').text(results[i].value, MARGIN + (col * 90), initialY + 5 + (row * 15));
+        }
+        yPos = initialY + (Math.ceil(results.length / 2) * 15);
+        
+        const calcChartImg = await captureChart('calculatorChart');
+        if (calcChartImg) {
+            if (yPos > 180) { pdf.addPage(); addHeader(); }
+            pdf.addImage(calcChartImg, 'PNG', MARGIN, yPos, 80, 80);
+            yPos += 90;
+        }
+
+        // 2. Seção Pilares
+        pdf.addPage();
+        addHeader();
+        addSectionTitle("Pilares da Conservação");
+        const pilares = document.querySelectorAll('#pilares .glass-card');
+        pilares.forEach(pilar => {
+            const title = pilar.querySelector('h3').textContent;
+            const description = pilar.querySelector('p').textContent;
+            pdf.setFontSize(12).setTextColor('#111827').text(title, MARGIN, yPos);
+            yPos += 6;
+            addText(description, 10);
+            yPos += 4;
         });
 
-        function initNavigation() {
-            const mainNav = document.getElementById('main-nav');
-            const navButtons = mainNav.querySelectorAll('.nav-button');
-            const contentSections = document.querySelectorAll('.content-section');
-
-            mainNav.addEventListener('click', (e) => {
-                const button = e.target.closest('.nav-button');
-                if (!button) return;
-                
-                const targetId = button.dataset.target;
-                navButtons.forEach(btn => btn.classList.remove('active'));
-                button.classList.add('active');
-                contentSections.forEach(section => section.classList.toggle('active', section.id === targetId));
-            });
+        // 3. Seção Guia Prático
+        addSectionTitle("Guia Prático de Embalagem");
+        const guiaItens = document.querySelectorAll('#guia-pratico li');
+        guiaItens.forEach(item => {
+            const step = item.querySelector('span').textContent;
+            const title = item.querySelector('h4').textContent;
+            const description = item.querySelector('p').textContent;
+            pdf.setFontSize(12).setTextColor('#111827').text(`${step}. ${title}`, MARGIN, yPos);
+            yPos += 6;
+            addText(description, 10, '#4b5563');
+            yPos += 4;
+        });
+        
+        // 4. Seção Explorador de Alimentos
+        pdf.addPage();
+        addHeader();
+        addSectionTitle("Explorador de Alimentos");
+        const foodItems = Array.from(document.querySelectorAll('#foodList li')).map(li => li.textContent);
+        addText("Vida útil de alimentos em condições ideais: " + foodItems.join(', '), 10);
+        const foodChartImg = await captureChart('foodChart');
+        if (foodChartImg) {
+            if (yPos > 180) { pdf.addPage(); addHeader(); }
+            pdf.addImage(foodChartImg, 'PNG', MARGIN, yPos, 180, 90);
+            yPos += 100;
         }
 
-        // --- Calculator Module ---
-        function initCalculator() {
-            const CALORIES_PER_PERSON_DAY = 2000;
-            const WATER_PER_PERSON_DAY = 4; // Liters
-            const KCAL_PER_KG = { GRAINS: 3700, LEGUMES: 3700, FATS: 9000, SUGARS: 4000, OTHERS: 3500 };
-            const CATEGORY_DISTRIBUTION = { GRAINS: 0.40, LEGUMES: 0.20, FATS: 0.20, SUGARS: 0.10, OTHERS: 0.10 };
-            let calculatorChart;
-            const calculatorChartCtx = document.getElementById('calculatorChart').getContext('2d');
-            
-            const pessoasSlider = document.getElementById('pessoas');
-            const mesesSlider = document.getElementById('meses');
-            const pessoasVal = document.getElementById('pessoas-val');
-            const mesesVal = document.getElementById('meses-val');
-
-            function calculateAndDisplay() {
-                const numPessoas = parseInt(pessoasSlider.value);
-                const numMeses = parseInt(mesesSlider.value);
-                const numDays = numMeses * 30;
-
-                pessoasVal.textContent = numPessoas;
-                mesesVal.textContent = numMeses;
-                
-                const totalKcal = numPessoas * numDays * CALORIES_PER_PERSON_DAY;
-                const totalWater = numPessoas * numDays * WATER_PER_PERSON_DAY;
-
-                const results = {
-                    graos: (totalKcal * CATEGORY_DISTRIBUTION.GRAINS) / KCAL_PER_KG.GRAINS,
-                    legumes: (totalKcal * CATEGORY_DISTRIBUTION.LEGUMES) / KCAL_PER_KG.LEGUMES,
-                    gorduras: (totalKcal * CATEGORY_DISTRIBUTION.FATS) / KCAL_PER_KG.FATS,
-                    acucares: (totalKcal * CATEGORY_DISTRIBUTION.SUGARS) / KCAL_PER_KG.SUGARS,
-                    outros: (totalKcal * CATEGORY_DISTRIBUTION.OTHERS) / KCAL_PER_KG.OTHERS,
-                };
-                
-                document.getElementById('res-agua').textContent = `${totalWater.toFixed(0)} L`;
-                document.getElementById('res-graos').textContent = `${results.graos.toFixed(1)} kg`;
-                document.getElementById('res-legumes').textContent = `${results.legumes.toFixed(1)} kg`;
-                document.getElementById('res-gorduras').textContent = `${results.gorduras.toFixed(1)} kg`;
-                document.getElementById('res-acucares').textContent = `${results.acucares.toFixed(1)} kg`;
-                document.getElementById('res-outros').textContent = `${results.outros.toFixed(1)} kg`;
-                
-                updateCalculatorChart(results);
-            }
-            
-            function updateCalculatorChart(results) {
-                const data = {
-                    labels: ['Grãos', 'Leguminosas', 'Gorduras', 'Açúcares', 'Outros'],
-                    datasets: [{
-                        data: Object.values(results),
-                        backgroundColor: ['#0e7490', '#0d9488', '#facc15', '#f97316', '#a855f7'],
-                        borderColor: 'var(--bg-color)',
-                        borderWidth: 3,
-                        hoverOffset: 4
-                    }]
-                };
-                if (calculatorChart) calculatorChart.destroy();
-                calculatorChart = new Chart(calculatorChartCtx, {
-                    type: 'doughnut', data: data,
-                    options: {
-                        responsive: true, maintainAspectRatio: false,
-                        plugins: { legend: { position: 'right', labels: { boxWidth: 20, padding: 15, color: 'var(--text-secondary)' } } }
-                    }
-                });
-            }
-
-            [pessoasSlider, mesesSlider].forEach(slider => slider.addEventListener('input', calculateAndDisplay));
-            calculateAndDisplay(); 
-        }
-
-        // --- Food Explorer Module ---
-        function initFoodExplorer() {
-            const foodData = [
-                { name: 'Trigo', lifespan: 30, category: 'superbasicos' }, { name: 'Arroz Branco', lifespan: 30, category: 'superbasicos' },
-                { name: 'Milho', lifespan: 30, category: 'superbasicos' }, { name: 'Feijão Carioca', lifespan: 30, category: 'superbasicos' },
-                { name: 'Açúcar', lifespan: 30, category: 'superbasicos' }, { name: 'Aveia em Flocos', lifespan: 30, category: 'superbasicos' },
-                { name: 'Macarrão', lifespan: 30, category: 'superbasicos' }, { name: 'Flocos de Batata', lifespan: 30, category: 'superbasicos' },
-                { name: 'Lentilhas', lifespan: 20, category: 'media' }, { name: 'Grão-de-bico', lifespan: 20, category: 'media' },
-                { name: 'Massa Enriquecida', lifespan: 20, category: 'media' }, { name: 'Carnes Liofilizadas', lifespan: 15, category: 'media' },
-                { name: 'Leite em Pó', lifespan: 10, category: 'media' }, { name: 'Óleos Vegetais', lifespan: 2, category: 'rapida' },
-                { name: 'Nozes e Sementes', lifespan: 2, category: 'rapida' }, { name: 'Farinha Integral', lifespan: 1, category: 'rapida' },
-                { name: 'Enlatados Ácidos', lifespan: 2, category: 'rapida' }, { name: 'Especiarias', lifespan: 2, category: 'rapida' }
-            ];
-            let foodChart;
-            const foodChartCtx = document.getElementById('foodChart').getContext('2d');
-            const foodList = document.getElementById('foodList');
-            
-            function renderList(data) {
-                foodList.innerHTML = '';
-                if (data.length === 0) {
-                    foodList.innerHTML = '<li class="text-slate-500">Nenhum alimento encontrado.</li>';
-                    return;
-                }
-                data.sort((a, b) => b.lifespan - a.lifespan).forEach(item => {
-                    const li = document.createElement('li');
-                    li.className = 'bg-white/5 p-3 rounded-lg flex justify-between items-center';
-                    li.innerHTML = `<span>${item.name}</span><span class="font-semibold text-sm text-cyan-300 bg-cyan-500/20 px-2 py-1 rounded-full">${item.lifespan} anos</span>`;
-                    foodList.appendChild(li);
-                });
-            }
-
-            function updateFoodChart(data) {
-                if (foodChart) foodChart.destroy();
-                foodChart = new Chart(foodChartCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: data.map(item => item.name),
-                        datasets: [{
-                            label: 'Vida Útil (anos)', data: data.map(item => item.lifespan),
-                            backgroundColor: 'rgba(34, 211, 238, 0.5)', borderColor: 'rgba(34, 211, 238, 1)', borderWidth: 1, borderRadius: 4
-                        }]
-                    },
-                    options: {
-                        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: {
-                            x: { grid: { color: 'rgba(255, 255, 255, 0.1)' }, title: { display: true, text: 'Vida Útil (anos)', color: 'var(--text-secondary)' }, ticks: { color: 'var(--text-secondary)' } },
-                            y: { grid: { display: false }, ticks: { color: 'var(--text-secondary)' } }
-                        }
-                    }
-                });
-                renderList(data);
-            }
-
-            document.querySelectorAll('.filter-btn').forEach(button => {
-                button.addEventListener('click', () => {
-                    const category = button.dataset.category;
-                    const filteredData = category === 'todos' ? foodData : foodData.filter(item => item.category === category);
-                    updateFoodChart(filteredData);
-                });
+        // 5. Seção Checklist
+        pdf.addPage();
+        addHeader();
+        addSectionTitle("Checklist de Emergência");
+        
+        const checklistItems = document.querySelectorAll('#checklist-container h3');
+        checklistItems.forEach(header => {
+            if (yPos > 260) { pdf.addPage(); addHeader(); }
+            pdf.setFontSize(12).setTextColor('#0891b2').text(removeEmojis(header.textContent), MARGIN, yPos);
+            yPos += 7;
+            const items = header.parentElement.querySelectorAll('li');
+            items.forEach(item => {
+                const checkbox = item.querySelector('input');
+                const label = item.querySelector('label');
+                if (yPos > 270) { pdf.addPage(); addHeader(); }
+                pdf.setFontSize(10).setTextColor('#374151').text(`[${checkbox.checked ? 'X' : ' '}] ${label.textContent}`, MARGIN + 5, yPos);
+                yPos += 6;
             });
-            updateFoodChart(foodData);
+            yPos += 4;
+        });
+
+        try {
+            const timestamp = new Date().toISOString().slice(0, 19).replace('T', '_').replace(/:/g, '-');
+            const filename = `Arca_Digital_${timestamp}.pdf`;
+            pdf.save(filename);
+        } catch (error) {
+            console.error("Erro ao salvar PDF:", error);
+        } finally {
+            button.innerHTML = originalButtonContent;
+            button.disabled = false;
         }
+    }
+    
+    document.addEventListener('DOMContentLoaded', async () => {
+      initNavigation();
+      initCalculator();
+      initFoodExplorer();
+      try {
+        await initFirebase();
+      } catch (e) {
+        console.error("Erro na autenticação:", e);
+      }
+      initChecklist();
+      
+      document.getElementById('generate-pdf-btn').addEventListener('click', generatePDF);
+    });
 
-        // --- Checklist Module with Cloud Sync ---
-        function initChecklist() {
-            if (!userId) {
-                console.log("User not authenticated. Checklist will not sync.");
-                return;
-            }
-            const checklistContainer = document.getElementById('checklist-container');
-            const allCheckboxes = checklistContainer.querySelectorAll('input[type="checkbox"]');
-            const progressBar = document.getElementById('checklist-progress-bar');
-            const progressText = document.getElementById('checklist-progress-text');
-            const syncStatusEl = document.getElementById('sync-status');
-            const pdfButton = document.getElementById('generate-pdf-btn');
-            let saveTimeout;
+    function initNavigation() {
+      const mainNav = document.getElementById('main-nav');
+      const navButtons = mainNav.querySelectorAll('.nav-button');
+      const contentSections = document.querySelectorAll('.content-section');
+      mainNav.addEventListener('click', (e) => {
+        const button = e.target.closest('.nav-button');
+        if (!button) return;
+        const targetId = button.dataset.target;
+        navButtons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        contentSections.forEach(sec => sec.classList.toggle('active', sec.id === targetId));
+      });
+    }
 
-            const appId = window.__app_id || 'default-app-id';
-            const checklistDocRef = doc(db, 'artifacts', appId, 'users', userId, 'checklist', 'state');
+    function initCalculator() {
+      const CAL_PER_DAY = 2000, WATER_PER_DAY = 4;
+      const KCAL_PER_KG = { GRAINS:3700, LEGUMES:3700, FATS:9000, SUGARS:4000, OTHERS:3500 };
+      const DIST = { GRAINS:0.4, LEGUMES:0.2, FATS:0.2, SUGARS:0.1, OTHERS:0.1 };
+      const ctx = document.getElementById('calculatorChart').getContext('2d');
+      const pSlider = document.getElementById('pessoas'), mSlider = document.getElementById('meses');
+      const pVal = document.getElementById('pessoas-val'), mVal = document.getElementById('meses-val');
+      function calc() {
+        const p = +pSlider.value, m = +mSlider.value, days = m*30;
+        pVal.textContent = p; mVal.textContent = m;
+        const totalCal = p*days*CAL_PER_DAY;
+        const totalWater = p*days*WATER_PER_DAY;
+        const res = {
+          graos: (totalCal*DIST.GRAINS)/KCAL_PER_KG.GRAINS,
+          legumes: (totalCal*DIST.LEGUMES)/KCAL_PER_KG.LEGUMES,
+          gorduras: (totalCal*DIST.FATS)/KCAL_PER_KG.FATS,
+          acucares: (totalCal*DIST.SUGARS)/KCAL_PER_KG.SUGARS,
+          outros: (totalCal*DIST.OTHERS)/KCAL_PER_KG.OTHERS,
+        };
+        document.getElementById('res-agua').textContent = `${totalWater.toFixed(0)} L`;
+        ['graos','legumes','gorduras','acucares','outros'].forEach(key => {
+          document.getElementById(`res-${key}`).textContent = `${res[key].toFixed(1)} kg`;
+        });
+        updateChart(res);
+      }
+      function updateChart(data) {
+        const values = Object.values(data);
+        const labels = ['Grãos','Leguminosas','Gorduras','Açúcares','Outros'];
+        const cfg = {
+          type:'doughnut',
+          data:{ labels, datasets:[{ data: values, backgroundColor:['#0e7490','#0d9488','#facc15','#f97316','#a855f7'], borderColor: 'var(--bg-color)', borderWidth:3, hoverOffset:4 }] },
+          options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'right', labels:{ boxWidth:20, padding:15, color: 'var(--text-secondary)' } } } }
+        };
+        if (charts.calculatorChart) charts.calculatorChart.destroy();
+        charts.calculatorChart = new Chart(ctx, cfg);
+      }
+      [pSlider,mSlider].forEach(slider => slider.addEventListener('input', calc));
+      calc();
+    }
 
-            function setSyncStatus(status) {
-                syncStatusEl.classList.add('visible');
-                const icon = syncStatusEl.querySelector('svg');
-                const text = syncStatusEl.querySelector('span');
-
-                if (status === 'saving') {
-                    icon.style.display = 'block';
-                    icon.classList.add('animate-spin');
-                    text.textContent = 'Salvando...';
-                } else if (status === 'saved') {
-                    icon.style.display = 'none';
-                    icon.classList.remove('animate-spin');
-                    text.textContent = 'Salvo na nuvem';
-                    setTimeout(() => syncStatusEl.classList.remove('visible'), 2000);
-                }
-            }
-
-            function updateProgress() {
-                const checkedItems = checklistContainer.querySelectorAll('input[type="checkbox"]:checked').length;
-                const totalItems = allCheckboxes.length;
-                const percentage = totalItems > 0 ? (checkedItems / totalItems) * 100 : 0;
-                progressBar.style.width = `${percentage}%`;
-                progressText.textContent = `${Math.round(percentage)}% Completo`;
-                
-                // Show or hide the PDF button based on completion
-                if (percentage >= 100) {
-                    pdfButton.classList.remove('hidden');
-                } else {
-                    pdfButton.classList.add('hidden');
-                }
-            }
-
-            async function saveStateToFirestore() {
-                clearTimeout(saveTimeout);
-                setSyncStatus('saving');
-                
-                const state = Array.from(allCheckboxes).reduce((acc, cb) => {
-                    acc[cb.id] = cb.checked;
-                    return acc;
-                }, {});
-
-                try {
-                    await setDoc(checklistDocRef, state, { merge: true });
-                    saveTimeout = setTimeout(() => setSyncStatus('saved'), 500);
-                } catch (error) {
-                    console.error("Error saving checklist state:", error);
-                }
-            }
-
-            function loadStateFromDoc(doc) {
-                const savedState = doc.data();
-                if (savedState) {
-                    allCheckboxes.forEach(checkbox => {
-                        if (savedState[checkbox.id] !== undefined) {
-                            checkbox.checked = savedState[checkbox.id];
-                        }
-                    });
-                }
-                updateProgress();
-            }
-
-            onSnapshot(checklistDocRef, (doc) => {
-                if (doc.exists()) {
-                    loadStateFromDoc(doc);
-                }
-                updateProgress();
-                setSyncStatus('saved');
-            }, (error) => {
-                console.error("Firestore snapshot error:", error);
-            });
-
-            checklistContainer.addEventListener('change', (e) => {
-                if (e.target.type === 'checkbox') {
-                    updateProgress();
-                    saveStateToFirestore();
-                }
-            });
+    function initFoodExplorer() {
+      const data = [
+        {name:'Trigo', lifespan:30, category:'superbasicos'},
+        {name:'Arroz Branco', lifespan:30, category:'superbasicos'},
+        {name:'Milho', lifespan:30, category:'superbasicos'},
+        {name:'Feijão Carioca', lifespan:30, category:'superbasicos'},
+        {name:'Açúcar', lifespan:30, category:'superbasicos'},
+        {name:'Aveia em Flocos', lifespan:30, category:'superbasicos'},
+        {name:'Macarrão', lifespan:30, category:'superbasicos'},
+        {name:'Flocos de Batata', lifespan:30, category:'superbasicos'},
+        {name:'Lentilhas', lifespan:20, category:'media'},
+        {name:'Grão-de-bico', lifespan:20, category:'media'},
+        {name:'Massa Enriquecida', lifespan:20, category:'media'},
+        {name:'Carnes Liofilizadas', lifespan:15, category:'media'},
+        {name:'Leite em Pó', lifespan:10, category:'media'},
+        {name:'Óleos Vegetais', lifespan:2, category:'rapida'},
+        {name:'Nozes e Sementes', lifespan:2, category:'rapida'},
+        {name:'Farinha Integral', lifespan:1, category:'rapida'},
+        {name:'Enlatados Ácidos', lifespan:2, category:'rapida'},
+        {name:'Especiarias', lifespan:2, category:'rapida'}
+      ];
+      const ctx = document.getElementById('foodChart').getContext('2d');
+      const listEl = document.getElementById('foodList');
+      function renderList(arr) {
+        listEl.innerHTML = '';
+        if (!arr.length) {
+          listEl.innerHTML = '<li class="text-slate-500">Nenhum alimento encontrado.</li>';
+          return;
         }
+        arr.sort((a,b)=>b.lifespan-a.lifespan).forEach(item => {
+          const li = document.createElement('li');
+          li.className = 'bg-white/5 p-3 rounded-lg flex justify-between items-center';
+          li.innerHTML = `<span>${item.name}</span><span class="font-semibold text-sm text-cyan-300 bg-cyan-500/20 px-2 py-1 rounded-full">${item.lifespan} anos</span>`;
+          listEl.appendChild(li);
+        });
+      }
+      function updateBar(arr) {
+        const labels = arr.map(i=>i.name);
+        const vals = arr.map(i=>i.lifespan);
+        const textColor = 'var(--text-secondary)';
+        const gridColor = 'rgba(255,255,255,0.1)';
+        const cfg = {
+          type:'bar',
+          data:{ labels, datasets:[{ label:'Vida Útil (anos)', data: vals, backgroundColor:'rgba(34,211,238,0.5)', borderColor:'rgba(34,211,238,1)', borderWidth:1, borderRadius:4 }] },
+          options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } }, scales:{ x:{ grid:{ color: gridColor }, title:{ display:true, text:'Vida Útil (anos)', color: textColor }, ticks:{ color: textColor } }, y:{ grid:{ display:false }, ticks:{ color: textColor } } } }
+        };
+        if (charts.foodChart) charts.foodChart.destroy();
+        charts.foodChart = new Chart(ctx, cfg);
+        renderList(arr);
+      }
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const cat = btn.dataset.category;
+          updateBar(cat==='todos'? data : data.filter(i=>i.category===cat));
+        });
+      });
+      updateBar(data);
+    }
 
-        // --- PDF Generator Module ---
-        function initPdfGenerator() {
-            const pdfButton = document.getElementById('generate-pdf-btn');
-            if (!pdfButton) return;
-
-            pdfButton.addEventListener('click', async () => {
-                // Original button icon
-                const originalIcon = pdfButton.innerHTML;
-                // Add a loading state to the button
-                pdfButton.disabled = true;
-                pdfButton.innerHTML = `<svg class="h-6 w-6 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
-
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF({
-                    orientation: 'p',
-                    unit: 'mm',
-                    format: 'a4'
-                });
-
-                const calculatorSection = document.getElementById('calculadora');
-                const checklistSection = document.getElementById('checklist');
-
-                try {
-                    // Capture Calculator Section
-                    const canvas1 = await html2canvas(calculatorSection, { scale: 2, useCORS: true, backgroundColor: '#0D0B14' });
-                    const imgData1 = canvas1.toDataURL('image/png');
-                    const imgProps1 = doc.getImageProperties(imgData1);
-                    const pdfWidth = doc.internal.pageSize.getWidth();
-                    const pdfHeight1 = (imgProps1.height * pdfWidth) / imgProps1.width;
-                    doc.addImage(imgData1, 'PNG', 0, 10, pdfWidth, pdfHeight1);
-
-                    // Capture Checklist Section
-                    doc.addPage();
-                    const canvas2 = await html2canvas(checklistSection, { scale: 2, useCORS: true, backgroundColor: '#0D0B14' });
-                    const imgData2 = canvas2.toDataURL('image/png');
-                    const imgProps2 = doc.getImageProperties(imgData2);
-                    const pdfHeight2 = (imgProps2.height * pdfWidth) / imgProps2.width;
-                    doc.addImage(imgData2, 'PNG', 0, 10, pdfWidth, pdfHeight2);
-
-                    doc.save('Arca_Digital_Relatorio.pdf');
-
-                } catch (error) {
-                    console.error("Error generating PDF:", error);
-                    // Use a more user-friendly notification instead of alert()
-                    // For example, you could show a temporary error message on the button itself.
-                } finally {
-                     // Restore button state
-                    pdfButton.disabled = false;
-                    pdfButton.innerHTML = originalIcon;
-                }
-            });
+    function initChecklist() {
+      const container = document.getElementById('checklist-container');
+      const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+      const bar = document.getElementById('checklist-progress-bar');
+      const text = document.getElementById('checklist-progress-text');
+      const syncEl = document.getElementById('sync-status');
+      let saveTimeout, unsub;
+      function updateProgress() {
+        const checked = container.querySelectorAll('input[type="checkbox"]:checked').length;
+        const total = checkboxes.length;
+        const pct = total>0? (checked/total)*100 : 0;
+        bar.style.width = `${pct}%`;
+        text.textContent = `${Math.round(pct)}% Completo`;
+      }
+      function setSync(status) {
+        if (!syncEl) return;
+        syncEl.classList.add('visible');
+        const icon = syncEl.querySelector('svg');
+        const span = syncEl.querySelector('span');
+        if (status==='saving') {
+          icon.style.display = 'block'; icon.classList.add('animate-spin'); span.textContent='Salvando...';
+        } else if (status==='saved') {
+          icon.style.display = 'none'; icon.classList.remove('animate-spin'); span.textContent='Salvo na nuvem';
+          setTimeout(()=>syncEl.classList.remove('visible'),1500);
+        } else {
+          icon.style.display = 'none'; icon.classList.remove('animate-spin'); span.textContent='Pronto';
         }
+      }
+      updateProgress(); setSync('idle');
+      checkboxes.forEach(cb => {
+        cb.addEventListener('change', () => {
+          updateProgress();
+          if (!userId||!db) return;
+          clearTimeout(saveTimeout);
+          setSync('saving');
+          const state = {};
+          checkboxes.forEach(c=> state[c.id]=c.checked);
+          const docRef = doc(db,'artifacts',window.__app_id||'default-app-id','users',userId,'checklist','state');
+          setDoc(docRef,state,{merge:true}).then(()=>{
+            saveTimeout=setTimeout(()=>setSync('saved'),300);
+          }).catch(console.error);
+        });
+      });
+      if (userId && db) {
+        const docRef = doc(db,'artifacts',window.__app_id||'default-app-id','users',userId,'checklist','state');
+        if (unsub) unsub();
+        unsub = onSnapshot(docRef, snap => {
+          if (snap.exists()) {
+            const data = snap.data();
+            checkboxes.forEach(cb=> {
+              if (data[cb.id]!==undefined) cb.checked = data[cb.id];
+            });
+            updateProgress();
+          }
+          setSync('saved');
+        }, console.error);
+      }
+    }
 
-
-        Chart.defaults.color = 'var(--text-secondary)';
-        Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)';
-
-    </script>
+    Chart.defaults.color = 'var(--text-secondary)';
+    Chart.defaults.borderColor = 'rgba(255,255,255,0.1)';
+  </script>
 </body>
 </html>
